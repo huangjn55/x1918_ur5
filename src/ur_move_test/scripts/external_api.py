@@ -11,9 +11,9 @@ from math import pi
 import json
 import zmq
 
-context = zmq.Context()
-socket = context.socket(zmq.REP)
-socket.bind('tcp://*:22501')
+# context = zmq.Context()
+# socket = context.socket(zmq.REP)
+# socket.bind('tcp://*:22501')
 
 
 class MoveGroupInteface(object):
@@ -40,26 +40,26 @@ class MoveGroupInteface(object):
         print self.robot.get_current_state()
         print ""
 
-    def plan_cartesian_path(self, scale=1):
+    def plan_cartesian_path(self, end_pose, scale=1):
         waypoints = []
-        wpose = self.move_group_commander.get_current_pose().pose
-        wpose.position.z -= scale * 0.1  # First move up (z)
-        waypoints.append(copy.deepcopy(wpose))
-        wpose.position.x += scale * 0.1  # Second move forward/backwards in (x)
-        waypoints.append(copy.deepcopy(wpose))
-        wpose.position.y += scale * 0.1  # Third move sideways (y)
-        waypoints.append(copy.deepcopy(wpose))
+        target_pose = geometry_msgs.msg.Pose()
+        target_pose.position.x = end_pose[0]
+        target_pose.position.y = end_pose[1]
+        target_pose.position.z = end_pose[2]
+        target_pose.orientation.w = end_pose[3]
+        target_pose.orientation.x = end_pose[4]
+        target_pose.orientation.y = end_pose[5]
+        target_pose.orientation.z = end_pose[6]
 
         (plan, fraction) = self.move_group_commander.compute_cartesian_path(
-            waypoints,  # waypoints to follow
+            target_pose,  # waypoints to follow
             0.01,  # eef_step
             0.0)  # jump_threshold
         # Note: We are just planning, not asking move_group to actually move the robot yet:
-        print "=========== Planning completed, Cartesian path is saved============="
-        return plan, fraction
+        print "=========== Planning completed, Start execution============="
+        self.move_group_commander.execute(plan, wait=True)
 
     def set_joint_value(self, joints):
-
         joint_value = self.move_group_commander.get_joint_value_target()
         print 'the joint value of initial state ', joint_value
         point_value = self.move_group_commander.get_current_pose()
@@ -69,24 +69,53 @@ class MoveGroupInteface(object):
         self.move_group_commander.execute(plan_joint, wait=True)
 
 
-def motion_planning(req):
-    motion_handle = MoveGroupInteface()
-    motion_handle.set_joint_value(req['joints'])
+# def info_raw(req):
+#     req = json.loads(req.decode('utf-8'))
+#     try:
+#         resp = motion_planning(req)
+#         resp['success'] = True
+#     except Exception as e:
+#         resp = {'success': False, 'error': str(e)}
+#     return json.dumps(resp).encode('utf-8')
 
 
-def info_raw(req):
-    req = json.loads(req.decode('utf-8'))
-    try:
-        resp = motion_planning(req)
-        resp['success'] = True
-    except Exception as e:
-        resp = {'success': False, 'error': str(e)}
-    return json.dumps(resp).encode('utf-8')
+# print('Waiting for requests...')
+# while True:
+#     raw_req = socket.recv()
+#     print(raw_req)
+#     raw_resp = info_raw(raw_req)
+#     socket.send(raw_resp)
 
 
-print('Waiting for requests...')
-while True:
-    raw_req = socket.recv()
-    print(raw_req)
-    raw_resp = info_raw(raw_req)
-    socket.send(raw_resp)
+class ExternalApi:
+    def __init__(self, net='tcp://*:22501'):
+        self.context = zmq.Context()
+        self.socket = context.socket(zmq.REP)
+        self.socket.bind(net)
+
+        self.robot_move = MoveGroupInteface()
+
+    def recv_resp(self):
+        req = self.context.recv()
+        req = json.loads(req.decode('utf-8'))
+        try:
+            resp = self.motion_planning(req)
+            resp['success'] = True
+        except Exception as e:
+            resp = {'success': False, 'error': str(e)}
+
+        return json.dumps(resp).encode('utf-8')
+
+    def motion_planning(self, req):
+        if req['mode'] == "Pose":
+            self.socket.send(self.move_group_commander.get_current_pose().pose)
+        if req['mode'] == "Joint":
+            self.motion_handle.set_joint_value(req['data'])
+        elif req['mode'] == "End":
+            self.motion_handle.plan_cartesian_path(req['data'])
+
+if __name__ == '__main__':
+    ser = ExternalApi()
+    while True:
+        raw_resp = ser.recv_resp()
+        ser.socket.send(raw_resp)

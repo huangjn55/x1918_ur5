@@ -14,22 +14,26 @@ class MoveGroupInteface(object):
     def __init__(self, action):
         super(MoveGroupInteface, self).__init__()
         self.action = action
-        # setup
+        # setup, 首先初始化moveit_commander和一个rospy节点：
         moveit_commander.roscpp_initialize(sys.argv)
         rospy.init_node('ur_move_test_node', anonymous=True)
+        # 实例化RobotCommander对象。提供诸如机器人的运动学模型和机器人当前的关节状态之类的信息
         self.robot = moveit_commander.RobotCommander()
+        # 实例化一个PlanningSceneInterface对象。这为获取、设置和更新机器人对周围世界的内部理解提供了一个远程接口
         self.scene = moveit_commander.PlanningSceneInterface()  # Not used in this tutorial
+        # 实例化MoveGroupCommander对象。该对象是计划组（一组关节）的接口
         group_name = "manipulator"  # group_name can be find in ur5_moveit_config/config/ur5.srdf
         self.move_group_commander = moveit_commander.MoveGroupCommander(group_name)
+        # 创建一个DisplayTrajectory ROS发布器, 用于在Rviz中显示轨迹
         self.display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',
                                                             moveit_msgs.msg.DisplayTrajectory, queue_size=20)
 
         # Getting Basic Information
-        self.planning_frame = self.move_group_commander.get_planning_frame()
+        self.planning_frame = self.move_group_commander.get_planning_frame()    # 该机器人的参考框架的名称
         print "============ Planning frame: %s" % self.planning_frame
-        self.eef_link = self.move_group_commander.get_end_effector_link()
+        self.eef_link = self.move_group_commander.get_end_effector_link()   # 末端执行器链接的名称
         print "============ End effector link: %s" % self.eef_link
-        self.group_names = self.robot.get_group_names()
+        self.group_names = self.robot.get_group_names() # 所有组的列表
         print "============ Available Planning Groups:", self.robot.get_group_names()
         print "============ Printing robot state:"
         print self.robot.get_current_state()
