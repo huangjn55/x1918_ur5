@@ -1,18 +1,62 @@
-from sys import path
+#!/usr/bin/env python
 
+from sys import path
 import numpy as np
 import zmq
 from math import *
 
-context = zmq.Context()
-socket = context.socket(zmq.REQ)
-socket.connect('tcp://localhost:22501')
+# context = zmq.Context()
+# socket = context.socket(zmq.REQ)
+# socket.connect('tcp://localhost:22501')
 
-# 三种控制模式，“Pose"获取当前robot姿态，“Joint”直接控制关节，“End”控制末端末端位置
-socket.send_json({
-    'mode': "Joint",
-    'data': [0, -pi/2, pi/2, -pi/2, -pi/2, 0]
-})
+# socket.send_json({
+#     'mode': "Pose",
+#     'data': [0, -pi/2, pi/2, -pi/2, -pi/2, 0]
+# })
 
 
-print(socket.recv_json())
+# print(socket.recv_json())
+
+
+class Client2UR:
+    def __init__(self, net='tcp://localhost:22501'):
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.REQ)
+        self.socket.connect(net)
+
+    def get_pose(self):
+        self.socket.send_json({
+            'mode': "Pose",
+            # 'data': []
+        })
+        recv = self.socket.recv_json()['data']
+        print recv
+
+        return recv
+
+    def joint_control(self, joints):
+        self.socket.send_json({
+            'mode': "Joint",
+            'data': joints
+        })
+        recv = self.socket.recv_json()
+        print recv
+
+    def end_control(self, pose):
+        self.socket.send_json({
+            'mode': "End",
+            'data': pose
+        })
+        recv = self.socket.recv_json()
+        print recv
+
+
+if __name__ == '__main__':
+    client = Client2UR()
+    pose = client.get_pose()
+    pose['pos'][2] = pose['pos'][2] + 0.1
+    print pose
+    client.end_control(pose)
+
+    # joints = [0, -pi/2, pi/2, -pi/2, -pi/2, 0]
+    # client.joint_control(joints)
