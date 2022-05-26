@@ -1,0 +1,9 @@
+[submodule "ddynamic_reconfigure"]
+	path = ddynamic_reconfigure
+	url = /home/dongxu/catkin_UR/src/ddynamic_reconfigure
+[submodule "realsense-ros"]
+	path = realsense-ros
+	url = /home/dongxu/catkin_UR/src/realsense-ros
+[submodule "universal_robot"]
+	path = universal_robot
+	url = /home/dongxu/catkin_UR/src/universal_robot
