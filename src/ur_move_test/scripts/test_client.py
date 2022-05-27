@@ -24,6 +24,16 @@ class Client2UR:
         self.socket = self.context.socket(zmq.REQ)
         self.socket.connect(net)
 
+    def set_velocity(self, vel):
+        self.socket.send_json({
+            'mode': "Velocity",
+            'data': vel
+        })
+        recv = self.socket.recv_json()['data']
+        print recv
+
+        return recv
+
     def get_pose(self):
         self.socket.send_json({
             'mode': "Pose",
@@ -54,7 +64,8 @@ class Client2UR:
 if __name__ == '__main__':
     client = Client2UR()
     pose = client.get_pose()
-    pose['pos'][2] = pose['pos'][2] + 0.1
+    client.set_velocity(1)
+    pose['pos'][2] = pose['pos'][2] + 0.05
     print pose
     client.end_control(pose)
 

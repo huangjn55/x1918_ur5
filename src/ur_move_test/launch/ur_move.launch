@@ -52,6 +52,6 @@
 
 <!--   <node name="ur_move_test_node" pkg="ur_move_test" type="ur_move.py" respawn="true" output="screen"> </node> -->
 
-<!--   <node name="ur_move_test_node" pkg="ur_move_test" type="external_api.py" respawn="true" output="screen"> </node> -->
+  <node name="external_api_node" pkg="ur_move_test" type="external_api.py" respawn="true" output="screen"> </node>
 
 </launch>

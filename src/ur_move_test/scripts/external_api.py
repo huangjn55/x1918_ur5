@@ -6,6 +6,7 @@ import rospy
 import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
+
 import math
 from math import pi
 import json
@@ -20,8 +21,10 @@ class MoveGroupInteface(object):
         rospy.init_node('ur_move_test_node', anonymous=True)
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()  # Not used in this tutorial
+
         group_name = "manipulator"  # group_name can be find in ur5_moveit_config/config/ur5.srdf
         self.move_group_commander = moveit_commander.MoveGroupCommander(group_name)
+        self.move_group_commander.set_max_velocity_scaling_factor(0.1)
         self.display_trajectory_publisher = rospy.Publisher('/move_group/display_planned_path',
                                                             moveit_msgs.msg.DisplayTrajectory, queue_size=20)
 
@@ -46,15 +49,17 @@ class MoveGroupInteface(object):
         target_pose.orientation.x = end_pose['ori'][1]
         target_pose.orientation.y = end_pose['ori'][2]
         target_pose.orientation.z = end_pose['ori'][3]
-        # waypoint_init.append(copy.deepcopy(target_pose))
 
-        (plan, fraction) = self.move_group_commander.compute_cartesian_path(
-            [target_pose],  # waypoints to follow
-            0.01,  # eef_step
-            0.0)  # jump_threshold
-        # Note: We are just planning, not asking move_group to actually move the robot yet:
-        print "=========== Planning completed, Start execution============="
-        self.move_group_commander.execute(plan, wait=True)
+        # (plan, fraction) = self.move_group_commander.compute_cartesian_path(
+        #     [target_pose],  # waypoints to follow
+        #     0.01,  # eef_step
+        #     0.0)  # jump_threshold
+        # # Note: We are just planning, not asking move_group to actually move the robot yet:
+        # print "=========== Planning completed, Start execution============="
+        # self.move_group_commander.execute(plan, wait=True)
+        self.move_group_commander.set_pose_target(target_pose)
+        self.move_group_commander.plan()
+        self.move_group_commander.go()
 
     def set_joint_value(self, joints):
         joint_value = self.move_group_commander.get_joint_value_target()
@@ -95,12 +100,15 @@ class ExternalApi:
         self.socket.bind(net)
 
         self.robot_move = MoveGroupInteface()
+        # moveit_commander.set
+
+    def set_move_velocity_scaling(self, vel):
+        self.robot_move.move_group_commander.set_max_velocity_scaling_factor(vel)
 
     def recv_resp(self):
         req = self.socket.recv()
         req = json.loads(req.decode('utf-8'))
 
-        print self.robot_move.move_group_commander.get_current_pose().pose
         try:
             resp = self.motion_planning(req)
         except Exception as e:
@@ -110,7 +118,10 @@ class ExternalApi:
 
     def motion_planning(self, req):
         resp = {}
-        if req['mode'] == "Pose":
+        if req['mode'] == "Velocity":
+            self.set_move_velocity_scaling(req['data'])
+            resp['data'] = req['data']
+        elif req['mode'] == "Pose":
             cur_pose = self.robot_move.move_group_commander.get_current_pose().pose
             resp['data'] = {'pos': [cur_pose.position.x, cur_pose.position.y, cur_pose.position.z],
                             'ori': [cur_pose.orientation.w, cur_pose.orientation.x,
