@@ -1,0 +1,2 @@
+
+-DCATKIN_DEVEL_PREFIX=/home/spencer/work_spaces/x1918_ur5/devel -DCMAKE_INSTALL_PREFIX=/home/spencer/work_spaces/x1918_ur5/install -G Unix Makefiles
