@@ -2,19 +2,15 @@
 # use moveit_commander (the Python MoveIt user interfaces )
 import sys
 import copy
-<<<<<<< HEAD
-=======
+
 import traceback
 
->>>>>>> spencer
 import rospy
 import moveit_commander
 import moveit_msgs.msg
 import geometry_msgs.msg
-<<<<<<< HEAD
-=======
+
 from scipy.interpolate import CubicSpline
->>>>>>> spencer
 
 import math
 from math import pi
@@ -23,11 +19,7 @@ import zmq
 
 
 class MoveGroupInteface(object):
-<<<<<<< HEAD
-    def __init__(self):
-=======
     def __init__(self, waypoints=None, ts=None):
->>>>>>> spencer
         super(MoveGroupInteface, self).__init__()
         # setup
         moveit_commander.roscpp_initialize(sys.argv)
@@ -52,14 +44,11 @@ class MoveGroupInteface(object):
         print self.robot.get_current_state()
         print ""
 
-<<<<<<< HEAD
-=======
         if waypoints is not None:
             self.waypoints = waypoints
         if ts is not None:
             self.ts = ts
 
->>>>>>> spencer
     def plan_cartesian_path(self, end_pose, scale=1):
         # waypoint_init = []
         target_pose = geometry_msgs.msg.Pose()
@@ -82,17 +71,6 @@ class MoveGroupInteface(object):
         self.move_group_commander.plan()
         self.move_group_commander.go()
 
-<<<<<<< HEAD
-    def set_joint_value(self, joints):
-        joint_value = self.move_group_commander.get_joint_value_target()
-        print 'the joint value of initial state ', joint_value
-        point_value = self.move_group_commander.get_current_pose()
-        print 'the position value of initial state ', point_value
-        self.move_group_commander.set_joint_value_target(joints)
-        plan_joint = self.move_group_commander.plan()
-        self.move_group_commander.execute(plan_joint, wait=True)
-
-=======
     def set_joint_value(self, joints, msg_type):
 
         self.move_group_commander.set_joint_value_target(joints)
@@ -138,7 +116,6 @@ class MoveGroupInteface(object):
             plan.joint_trajectory.points = plan.joint_trajectory.points[: l1]
 
         return plan
->>>>>>> spencer
 
 # def info_raw(req):
 #     req = json.loads(req.decode('utf-8'))
@@ -167,10 +144,6 @@ class ExternalApi:
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.REP)
         self.socket.bind(net)
-<<<<<<< HEAD
-
-=======
->>>>>>> spencer
         self.robot_move = MoveGroupInteface()
         # moveit_commander.set
 
@@ -183,43 +156,14 @@ class ExternalApi:
 
         try:
             resp = self.motion_planning(req)
-<<<<<<< HEAD
-        except Exception as e:
-            resp = {'success': False, 'error': str(e)}
-=======
         except:
             traceback.print_exc()
             resp = {'success': False}
->>>>>>> spencer
 
         return json.dumps(resp).encode('utf-8')
 
     def motion_planning(self, req):
         resp = {}
-<<<<<<< HEAD
-        if req['mode'] == "Velocity":
-            self.set_move_velocity_scaling(req['data'])
-            resp['data'] = req['data']
-        elif req['mode'] == "Pose":
-            cur_pose = self.robot_move.move_group_commander.get_current_pose().pose
-            resp['data'] = {'pos': [cur_pose.position.x, cur_pose.position.y, cur_pose.position.z],
-                            'ori': [cur_pose.orientation.w, cur_pose.orientation.x,
-                                    cur_pose.orientation.y, cur_pose.orientation.z]}
-        elif req['mode'] == "Joint":
-            self.robot_move.set_joint_value(req['data'])
-            resp['J_success'] = True
-        elif req['mode'] == "End":
-            self.robot_move.plan_cartesian_path(req['data'])
-            resp['E_success'] = True
-
-        return resp
-
-
-if __name__ == '__main__':
-    robot_move = MoveGroupInteface()
-    ser = ExternalApi()
-    req = {}
-=======
         if req['owner'] == 'huangjn':
             if req['mode'] == "Velocity":
                 self.set_move_velocity_scaling(req['data'])
@@ -281,7 +225,6 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     ser = ExternalApi()
     # req = {}
->>>>>>> spencer
     # req['mode'] = 'End'
     # req['data'] = {'pos': [0.379260105581, 0.180132452938, 0.423940547116],
     #                'ori': [-0.0182792096446, 0.705899930593, 0.0169701332457, 0.70787228584]}
@@ -290,7 +233,3 @@ if __name__ == '__main__':
         raw_resp = ser.recv_resp()
         ser.socket.send(raw_resp)
 
-<<<<<<< HEAD
-
-=======
->>>>>>> spencer
