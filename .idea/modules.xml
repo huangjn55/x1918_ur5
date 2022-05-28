@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+<<<<<<< HEAD
       <module fileurl="file://$PROJECT_DIR$/.idea/catkin_UR.iml" filepath="$PROJECT_DIR$/.idea/catkin_UR.iml" />
+=======
+      <module fileurl="file://$PROJECT_DIR$/.idea/x1918_ur5.iml" filepath="$PROJECT_DIR$/.idea/x1918_ur5.iml" />
+>>>>>>> spencer
     </modules>
   </component>
 </project>

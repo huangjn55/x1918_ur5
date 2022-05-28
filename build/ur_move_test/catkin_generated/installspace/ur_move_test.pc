@@ -1,0 +1,8 @@
+prefix=/home/spencer/work_spaces/x1918_ur5/install
+
+Name: ur_move_test
+Description: Description of ur_move_test
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
